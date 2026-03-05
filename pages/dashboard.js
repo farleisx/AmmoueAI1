@@ -1,5 +1,4 @@
 // pages/dashboard.js
-"use client";
 
 import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
@@ -50,7 +49,6 @@ export default function UserDashboard() {
                 Logic.loadUserPlanAndGateContent(user, userEmailSpan, currentPlanEl, proContent, upgradeCardWrapper);
                 
                 Logic.listenForPendingTransfers(user.uid, (transfers) => {
-                    // @ts-ignore
                     window.currentPendingTransfers = transfers;
                     UI.renderPendingTransfers(transfers);
                 });
@@ -58,15 +56,14 @@ export default function UserDashboard() {
                 if (loadingScreen) loadingScreen.classList.add('hidden');
                 if (dashboardContent) dashboardContent.classList.remove('hidden');
                 
-                // @ts-ignore
                 if (window.lucide) setTimeout(() => window.lucide.createIcons(), 100);
             } else {
                 window.location.href = '/login';
             }
         });
 
-        const handleGlobalClick = (e: MouseEvent) => {
-            const target = e.target as HTMLElement;
+        const handleGlobalClick = (e) => {
+            const target = e.target;
             if (!target.closest('.project-menu-trigger') && !target.closest('.project-menu')) {
                 document.querySelectorAll('.project-menu').forEach(m => m.classList.remove('active'));
             }
@@ -91,7 +88,7 @@ export default function UserDashboard() {
     const closeDeleteModal = () => { UI.closeDeleteModal(); };
     const closeTransferModal = () => { UI.closeTransferModal(); };
     const handleTransferProject = () => { Logic.executeTransferProject(); };
-    const triggerFilter = (val: string) => { Logic.filterProjects(val, UI.renderProjects); };
+    const triggerFilter = (val) => { Logic.filterProjects(val, UI.renderProjects); };
 
     return (
         <>
@@ -323,7 +320,7 @@ export default function UserDashboard() {
                         <div className="mb-8">
                             <div className="relative">
                                 <i data-lucide="search" className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500"></i>
-                                <input type="text" id="project-search" onInput={(e) => triggerFilter((e.target as HTMLInputElement).value)}
+                                <input type="text" id="project-search" onInput={(e) => triggerFilter(e.target.value)}
                                         placeholder="Search projects..."
                                         className="w-full bg-white/5 border border-white/10 rounded-xl shadow-md focus:border-ammoue focus:ring-1 focus:ring-ammoue transition duration-150 p-3 pl-10 text-gray-200 placeholder-gray-600 outline-none" />
                             </div>
