@@ -1,0 +1,12 @@
+/* styles/globals.css */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --ammoue: #0d9488;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+}
