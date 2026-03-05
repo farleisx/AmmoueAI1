@@ -49,16 +49,22 @@ export default function UserDashboard() {
                 Logic.loadUserPlanAndGateContent(user, userEmailSpan, currentPlanEl, proContent, upgradeCardWrapper);
                 
                 Logic.listenForPendingTransfers(user.uid, (transfers) => {
-                    window.currentPendingTransfers = transfers;
+                    if (typeof window !== "undefined") {
+                        window.currentPendingTransfers = transfers;
+                    }
                     UI.renderPendingTransfers(transfers);
                 });
 
                 if (loadingScreen) loadingScreen.classList.add('hidden');
                 if (dashboardContent) dashboardContent.classList.remove('hidden');
                 
-                if (window.lucide) setTimeout(() => window.lucide.createIcons(), 100);
+                if (typeof window !== "undefined" && window.lucide) {
+                    setTimeout(() => window.lucide.createIcons(), 100);
+                }
             } else {
-                window.location.href = '/login';
+                if (typeof window !== "undefined") {
+                    window.location.href = '/login';
+                }
             }
         });
 
