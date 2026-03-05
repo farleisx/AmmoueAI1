@@ -1,9 +1,14 @@
- // app/dashboard/page.tsx 
+// pages/dashboard.js
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
 import Head from 'next/head';
 import Script from 'next/script';
+
+// --- ADDITIVE IMPORTS ---
+import { observeAuth } from "@/lib/firedashboard";
+import * as Logic from "@/lib/dashboard-logic";
+import * as UI from "@/lib/dashboard-ui";
 
 // This component preserves 100% of the original HTML/CSS structure and logic 
 // converted into a Next.js Functional Component.
@@ -13,20 +18,80 @@ export default function UserDashboard() {
 
     useEffect(() => {
         setIsClient(true);
+
+        // --- ADDITIVE LOGIC (STRICT PATCH MODE) ---
+        const unsubscribe = observeAuth((user) => {
+            if (user) {
+                const loadingScreen = document.getElementById('loading-screen');
+                const dashboardContent = document.getElementById('dashboard-content');
+                const userEmailSpan = document.getElementById('user-email');
+                const currentPlanEl = document.getElementById('current-plan');
+                const proContent = document.getElementById('pro-content');
+                const upgradeCardWrapper = document.getElementById('upgrade-card-wrapper');
+                const editForm = document.getElementById('edit-project-form');
+                const confirmDeleteButton = document.getElementById('confirm-delete-button');
+                const confirmDeleteAllButton = document.getElementById('confirm-delete-all-button');
+
+                if (editForm) editForm.addEventListener('submit', Logic.handleEditFormSubmit);
+                
+                if (confirmDeleteButton) {
+                    confirmDeleteButton.addEventListener('click', () => {
+                        const id = confirmDeleteButton.getAttribute('data-project-id');
+                        if (id) Logic.executeDeleteProject(id);
+                    });
+                }
+
+                if (confirmDeleteAllButton) {
+                    confirmDeleteAllButton.addEventListener('click', Logic.executeDeleteAllProjects);
+                }
+
+                Logic.setCurrentUserId(user.uid);
+                Logic.getProjects(user.uid, UI.renderProjects);
+                Logic.loadUserPlanAndGateContent(user, userEmailSpan, currentPlanEl, proContent, upgradeCardWrapper);
+                
+                Logic.listenForPendingTransfers(user.uid, (transfers) => {
+                    // @ts-ignore
+                    window.currentPendingTransfers = transfers;
+                    UI.renderPendingTransfers(transfers);
+                });
+
+                if (loadingScreen) loadingScreen.classList.add('hidden');
+                if (dashboardContent) dashboardContent.classList.remove('hidden');
+                
+                // @ts-ignore
+                if (window.lucide) setTimeout(() => window.lucide.createIcons(), 100);
+            } else {
+                window.location.href = '/login';
+            }
+        });
+
+        const handleGlobalClick = (e: MouseEvent) => {
+            const target = e.target as HTMLElement;
+            if (!target.closest('.project-menu-trigger') && !target.closest('.project-menu')) {
+                document.querySelectorAll('.project-menu').forEach(m => m.classList.remove('active'));
+            }
+        };
+
+        document.addEventListener('click', handleGlobalClick);
+
+        return () => {
+            unsubscribe();
+            document.removeEventListener('click', handleGlobalClick);
+        };
     }, []);
 
     // Placeholder functions to maintain compatibility with original onclick handlers
-    const handleLogout = () => { if (window.handleLogout) window.handleLogout(); };
-    const openExportModal = () => { if (window.openExportModal) window.openExportModal(); };
-    const openDeleteAllModal = () => { if (window.openDeleteAllModal) window.openDeleteAllModal(); };
-    const handleExportAll = () => { if (window.handleExportAll) window.handleExportAll(); };
-    const closeExportModal = () => { if (window.closeExportModal) window.closeExportModal(); };
-    const closeDeleteAllModal = () => { if (window.closeDeleteAllModal) window.closeDeleteAllModal(); };
-    const closeEditModal = () => { if (window.closeEditModal) window.closeEditModal(); };
-    const closeDeleteModal = () => { if (window.closeDeleteModal) window.closeDeleteModal(); };
-    const closeTransferModal = () => { if (window.closeTransferModal) window.closeTransferModal(); };
-    const handleTransferProject = () => { if (window.handleTransferProject) window.handleTransferProject(); };
-    const triggerFilter = (val: string) => { if (window.triggerFilter) window.triggerFilter(val); };
+    const handleLogout = () => { Logic.handleLogout(); };
+    const openExportModal = () => { UI.openExportModal(); };
+    const openDeleteAllModal = () => { UI.openDeleteAllModal(); };
+    const handleExportAll = () => { Logic.handleExportAll(); };
+    const closeExportModal = () => { UI.closeExportModal(); };
+    const closeDeleteAllModal = () => { UI.closeDeleteAllModal(); };
+    const closeEditModal = () => { UI.closeEditModal(); };
+    const closeDeleteModal = () => { UI.closeDeleteModal(); };
+    const closeTransferModal = () => { UI.closeTransferModal(); };
+    const handleTransferProject = () => { Logic.executeTransferProject(); };
+    const triggerFilter = (val: string) => { Logic.filterProjects(val, UI.renderProjects); };
 
     return (
         <>
@@ -360,75 +425,6 @@ export default function UserDashboard() {
                         </div>
                     </div>
                 </div>
-
-                <Script id="dashboard-init" strategy="lazyOnload" dangerouslySetInnerHTML={{
-                    __html: `
-                        import { observeAuth } from "./firedashboard.js";
-                        import * as Logic from "./dashboard-logic.js";
-                        import * as UI from "./dashboard-ui.js";
-
-                        window.handleLogout = Logic.handleLogout;
-                        window.handlePreview = Logic.handlePreview;
-                        window.handleDownload = Logic.handleDownload;
-                        window.handleCopyCode = Logic.handleCopyCode;
-                        window.handleExportAll = Logic.handleExportAll;
-                        window.handleTransferProject = Logic.executeTransferProject;
-                        window.openExportModal = UI.openExportModal;
-                        window.closeExportModal = UI.closeExportModal;
-                        window.openDeleteModal = UI.openDeleteModal;
-                        window.closeDeleteModal = UI.closeDeleteModal;
-                        window.openDeleteAllModal = UI.openDeleteAllModal;
-                        window.closeDeleteAllModal = UI.closeDeleteAllModal;
-                        window.openEditModal = UI.openEditModal;
-                        window.closeEditModal = UI.closeEditModal;
-                        window.openTransferModal = UI.openTransferModal;
-                        window.closeTransferModal = UI.closeTransferModal;
-                        window.toggleProjectMenu = UI.toggleProjectMenu;
-                        window.handleUpgradeClick = () => window.location.href = '/upgrade';
-                        window.triggerFilter = (val) => Logic.filterProjects(val, UI.renderProjects);
-
-                        const loadingScreen = document.getElementById('loading-screen');
-                        const dashboardContent = document.getElementById('dashboard-content');
-                        const userEmailSpan = document.getElementById('user-email');
-                        const currentPlanEl = document.getElementById('current-plan');
-                        const proContent = document.getElementById('pro-content');
-                        const upgradeCardWrapper = document.getElementById('upgrade-card-wrapper');
-                        const editForm = document.getElementById('edit-project-form');
-                        const confirmDeleteButton = document.getElementById('confirm-delete-button');
-                        const confirmDeleteAllButton = document.getElementById('confirm-delete-all-button');
-
-                        if (editForm) editForm.addEventListener('submit', Logic.handleEditFormSubmit);
-                        confirmDeleteButton.addEventListener('click', () => {
-                            const id = confirmDeleteButton.getAttribute('data-project-id');
-                            if (id) Logic.executeDeleteProject(id);
-                        });
-                        confirmDeleteAllButton.addEventListener('click', Logic.executeDeleteAllProjects);
-                        document.addEventListener('click', (e) => {
-                            if (!e.target.closest('.project-menu-trigger') && !e.target.closest('.project-menu')) {
-                                document.querySelectorAll('.project-menu').forEach(m => m.classList.remove('active'));
-                            }
-                        });
-
-                        observeAuth((user) => {
-                            if (user) {
-                                Logic.setCurrentUserId(user.uid);
-                                Logic.getProjects(user.uid, UI.renderProjects);
-                                Logic.loadUserPlanAndGateContent(user, userEmailSpan, currentPlanEl, proContent, upgradeCardWrapper);
-                                
-                                Logic.listenForPendingTransfers(user.uid, (transfers) => {
-                                    window.currentPendingTransfers = transfers;
-                                    UI.renderPendingTransfers(transfers);
-                                });
-
-                                loadingScreen.classList.add('hidden');
-                                dashboardContent.classList.remove('hidden');
-                                setTimeout(() => lucide.createIcons(), 100);
-                            } else {
-                                window.location.href = '/login';
-                            }
-                        });
-                    `
-                }} />
             </div>
         </>
     );
