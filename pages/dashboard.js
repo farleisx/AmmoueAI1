@@ -1,0 +1,435 @@
+ // app/dashboard/page.tsx 
+"use client";
+
+import React, { useState, useEffect, useRef } from 'react';
+import Head from 'next/head';
+import Script from 'next/script';
+
+// This component preserves 100% of the original HTML/CSS structure and logic 
+// converted into a Next.js Functional Component.
+
+export default function UserDashboard() {
+    const [isClient, setIsClient] = useState(false);
+
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+
+    // Placeholder functions to maintain compatibility with original onclick handlers
+    const handleLogout = () => { if (window.handleLogout) window.handleLogout(); };
+    const openExportModal = () => { if (window.openExportModal) window.openExportModal(); };
+    const openDeleteAllModal = () => { if (window.openDeleteAllModal) window.openDeleteAllModal(); };
+    const handleExportAll = () => { if (window.handleExportAll) window.handleExportAll(); };
+    const closeExportModal = () => { if (window.closeExportModal) window.closeExportModal(); };
+    const closeDeleteAllModal = () => { if (window.closeDeleteAllModal) window.closeDeleteAllModal(); };
+    const closeEditModal = () => { if (window.closeEditModal) window.closeEditModal(); };
+    const closeDeleteModal = () => { if (window.closeDeleteModal) window.closeDeleteModal(); };
+    const closeTransferModal = () => { if (window.closeTransferModal) window.closeTransferModal(); };
+    const handleTransferProject = () => { if (window.handleTransferProject) window.handleTransferProject(); };
+    const triggerFilter = (val: string) => { if (window.triggerFilter) window.triggerFilter(val); };
+
+    return (
+        <>
+            <Head>
+                <meta charSet="UTF-8" />
+                <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+                <link rel="icon" type="image/png" href="Gemini_Generated_Image_qry9pfqry9pfqry9.png" />
+                <title>Ammoue | User Dashboard</title>
+            </Head>
+
+            {/* Scripts from original head */}
+            <Script src="cookies.js" strategy="beforeInteractive" />
+            <Script src="analytics-head.js" strategy="beforeInteractive" />
+            <Script src="https://cdn.tailwindcss.com" strategy="beforeInteractive" />
+            <Script src="https://unpkg.com/lucide@latest" strategy="afterInteractive" />
+            <Script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js" strategy="afterInteractive" />
+
+            <style jsx global>{`
+                @import url('https://fonts.googleapis.com/css2?family=Geist:wght@100;300;400;500;600&display=swap');
+                body {
+                    font-family: 'Geist', sans-serif;
+                    background-color: #030303;
+                    color: #ededed;
+                }
+                .text-ammoue { color: #2dd4bf; }
+                .bg-ammoue { background-color: #0d9488; }
+                .loading-screen {
+                    position: fixed;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background-color: #030303;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    z-index: 50;
+                }
+                .line-clamp-2 {
+                    display: -webkit-box;
+                    -webkit-box-orient: vertical;
+                    overflow: hidden;
+                    -webkit-line-clamp: 2;
+                }
+                .glass-card {
+                    background: rgba(10, 10, 10, 0.7);
+                    backdrop-filter: blur(20px) saturate(180%);
+                    border: 1px solid rgba(255, 255, 255, 0.08);
+                    transition: all 0.3s ease;
+                }
+                .glass-card:hover {
+                    background: rgba(15, 15, 15, 0.9);
+                    border-color: #0d9488;
+                    transform: translateY(-2px);
+                    box-shadow: 0 12px 24px -8px rgba(0, 0, 0, 0.5);
+                }
+                .project-menu {
+                    display: none;
+                    position: absolute;
+                    right: 0;
+                    top: 100%;
+                    z-index: 30;
+                    min-width: 160px;
+                }
+                .project-menu.active {
+                    display: block;
+                }
+                .canvas-grid {
+                    background-color: #030303;
+                    background-image: linear-gradient(#141414 1px, transparent 1px), linear-gradient(90deg, #141414 1px, transparent 1px);
+                    background-size: 32px 32px;
+                    background-attachment: fixed;
+                }
+                #message-box {
+                    background: rgba(10, 10, 10, 0.8);
+                    backdrop-filter: blur(12px);
+                    border: 1px solid rgba(255, 255, 255, 0.1);
+                }
+                .preview-window-container {
+                    position: relative;
+                    width: 100%;
+                    height: 140px;
+                    background: #050505;
+                    border-radius: 12px;
+                    overflow: hidden;
+                    margin-bottom: 12px;
+                    border: 1px solid rgba(255,255,255,0.05);
+                }
+                .preview-iframe {
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    width: 1200px;
+                    height: 800px;
+                    border: none;
+                    transform: translate(-50%, -50%) scale(0.22);
+                    transform-origin: center;
+                    pointer-events: none;
+                    background: white;
+                    opacity: 0;
+                    transition: opacity 0.5s ease;
+                }
+                .glass-card:hover .preview-iframe {
+                    opacity: 1;
+                }
+                .preview-placeholder {
+                    position: absolute;
+                    inset: 0;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    background: linear-gradient(45deg, #0a0a0a, #111);
+                    transition: opacity 0.3s ease;
+                    z-index: 5;
+                }
+                .glass-card:hover .preview-placeholder {
+                    opacity: 0;
+                }
+                .group:hover .group-hover\:visible {
+                    display: block;
+                }
+                #credit-progress {
+                    box-shadow: 0 0 8px rgba(45, 212, 191, 0.4);
+                }
+                @keyframes pulse-subtle {
+                  0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.1); }
+                  70% { box-shadow: 0 0 0 10px rgba(245, 158, 11, 0); }
+                  100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+                }
+                .animate-pulse-subtle {
+                  animation: pulse-subtle 2s infinite;
+                }
+            `}</style>
+
+            <div className="antialiased min-h-screen canvas-grid">
+                <div id="loading-screen" className="loading-screen">
+                    <svg className="animate-spin h-8 w-8 text-ammoue" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                </div>
+
+                <div id="message-box" className="p-4 rounded-xl shadow-2xl text-white font-semibold fixed top-4 left-1/2 transform -translate-x-1/2 opacity-0 transition-opacity duration-300 z-50"></div>
+
+                <div id="dashboard-content" className="min-h-screen hidden transition-opacity duration-500">
+                    <nav className="bg-[#030303] border-b border-white/[0.06] p-4 flex justify-between items-center sticky top-0 z-10">
+                        <div className="flex items-center gap-3">
+                            <div className="p-1.5 bg-white/10 rounded-xl border border-white/10 backdrop-blur-md shadow-[0_0_15px_rgba(255,255,255,0.05)]">
+                                <img src="Gemini_Generated_Image_qry9pfqry9pfqry9.png" alt="Ammoue Logo" className="h-8 w-8 object-contain" />
+                            </div>
+                            <div className="text-2xl font-extrabold tracking-tight">
+                                <span className="text-ammoue [text-shadow:_0_0_10px_rgba(45,212,191,0.3)]">Dash</span><span className="text-white">board</span>
+                            </div>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                            <div className="relative group py-2">
+                                <div className="flex items-center cursor-default space-x-2">
+                                    <span className="text-gray-500 text-sm">Welcome,</span>
+                                    <span id="user-email" className="font-bold text-gray-100 border-b border-dashed border-gray-600 hover:border-ammoue transition-colors cursor-pointer">Loading...</span>
+                                    <i data-lucide="chevron-down" className="w-4 h-4 text-gray-500 group-hover:rotate-180 transition-transform duration-300"></i>
+                                </div>
+
+                                <div className="absolute right-0 mt-1 w-64 pt-4 opacity-0 invisible group-hover:opacity-100 group-hover:visible group-hover:translate-y-0 translate-y-2 transition-all duration-300 z-50">
+                                    <div className="glass-card bg-[#0a0a0a] rounded-2xl p-4 shadow-2xl border border-white/10">
+                                        <div id="low-credit-warning" className="hidden items-center gap-1 text-[9px] font-bold text-red-500 mb-2 animate-pulse">
+                                            <i data-lucide="alert-circle" className="w-3 h-3"></i>
+                                            LOW BALANCE: TOP UP SOON
+                                        </div>
+                                        <div className="mb-4">
+                                            <p className="text-[10px] uppercase tracking-widest text-gray-500 mb-1">Your Balance</p>
+                                            <div className="flex items-end justify-between">
+                                                <span id="user-credits" className="text-2xl font-bold text-white">--</span>
+                                                <span className="text-xs text-gray-400 pb-1">Credits left</span>
+                                            </div>
+                                            <div className="w-full bg-white/5 h-1.5 rounded-full mt-2 overflow-hidden">
+                                                <div id="credit-progress" className="bg-ammoue h-full transition-all duration-1000" style={{ width: '0%' }}></div>
+                                            </div>
+                                        </div>
+
+                                        <div className="space-y-2 border-t border-white/5 pt-3">
+                                            <a href="/upgrade" id="pop-upgrade-btn" className="flex items-center gap-3 p-2 rounded-lg hover:bg-yellow-500/10 text-yellow-500 transition-colors text-sm font-medium">
+                                                <i data-lucide="zap" className="w-4 h-4 fill-yellow-500"></i>
+                                                Upgrade to Pro
+                                            </a>
+                                            <a href="/profile" className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/5 text-gray-300 transition-colors text-sm font-medium">
+                                                <i data-lucide="settings" className="w-4 h-4"></i>
+                                                Settings
+                                            </a>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <button onClick={handleLogout} className="px-3 py-2 text-sm font-medium rounded-xl text-white bg-red-500/80 hover:bg-red-600 transition duration-150 shadow-md">
+                                Log Out
+                            </button>
+                        </div>
+                    </nav>
+
+                    <header className="p-4 md:p-8 max-w-6xl mx-auto flex flex-wrap gap-4 justify-between items-center border-b border-white/[0.06] mb-6">
+                        <div className="flex items-center space-x-3">
+                            <h1 className="text-3xl font-bold text-white">Your Sites</h1>
+                            <span id="project-count" className="bg-white/5 text-teal-400 text-xs font-bold px-2.5 py-0.5 rounded-full border border-white/10">0</span>
+                            
+                            <div className="flex items-center gap-2 ml-4">
+                                <button id="btn-export-all" onClick={openExportModal} className="px-3 py-1.5 text-xs font-bold rounded-lg text-blue-400 border border-blue-500/20 hover:bg-blue-500/10 transition-all flex items-center">
+                                    <i data-lucide="folder-down" className="w-3.5 h-3.5 mr-1.5"></i> Export All (ZIP)
+                                </button>
+                                <button onClick={openDeleteAllModal} className="px-3 py-1.5 text-xs font-bold rounded-lg text-red-400 border border-red-500/20 hover:bg-red-500/10 transition-all flex items-center">
+                                    <i data-lucide="trash-2" className="w-3.5 h-3.5 mr-1.5"></i> Delete All
+                                </button>
+                            </div>
+                        </div>
+                        <div className="flex items-center space-x-4">
+                            <span className="text-gray-500 text-sm font-medium">Your Plan:</span>
+                            <span id="current-plan" className="text-xl font-extrabold text-ammoue">Loading...</span>
+                            <div id="upgrade-card-wrapper"></div>
+                        </div>
+                    </header>
+
+                    <main className="p-4 md:p-8 pt-0 max-w-6xl mx-auto">
+                        <div id="pending-notifications-container"></div>
+                        <section id="pro-content" className="hidden mb-8 border border-yellow-500/20 bg-yellow-500/5 p-6 rounded-2xl shadow-inner backdrop-blur-sm">
+                            <div className="flex items-center justify-between">
+                                <h3 className="text-2xl font-bold text-yellow-500 flex items-center">
+                                    <i data-lucide="gem" className="w-6 h-6 mr-2 fill-yellow-500 text-yellow-500"></i> PRO Exclusive Features
+                                </h3>
+                                <span className="text-sm font-semibold text-black bg-yellow-500 px-3 py-1 rounded-full">PRO ACTIVE</span>
+                            </div>
+                            <p className="mt-3 text-lg text-yellow-200/80">You now have access to advanced AI settings, 5 each separated Deployments, and Our Agent Era 2!</p>
+                        </section>
+                        
+                        <div className="mb-8">
+                            <div className="relative">
+                                <i data-lucide="search" className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-500"></i>
+                                <input type="text" id="project-search" onInput={(e) => triggerFilter((e.target as HTMLInputElement).value)}
+                                        placeholder="Search projects..."
+                                        className="w-full bg-white/5 border border-white/10 rounded-xl shadow-md focus:border-ammoue focus:ring-1 focus:ring-ammoue transition duration-150 p-3 pl-10 text-gray-200 placeholder-gray-600 outline-none" />
+                            </div>
+                        </div>
+
+                        <div id="projects-container" className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        </div>
+                    </main>
+                </div>
+
+                <div id="edit-modal" className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden items-center justify-center">
+                    <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl p-6 w-full max-w-lg m-4 transform transition-all duration-300 scale-95 opacity-0" id="edit-modal-content">
+                        <h2 className="text-2xl font-bold text-white mb-4 flex items-center justify-between">
+                            Edit Project Details
+                            <button onClick={closeEditModal} className="text-gray-500 hover:text-gray-300">
+                                <i data-lucide="x" className="w-6 h-6"></i>
+                            </button>
+                        </h2>
+                        <form id="edit-project-form">
+                            <input type="hidden" id="edit-project-id" />
+                            <div className="mb-4">
+                                <label htmlFor="edit-title" className="block text-sm font-medium text-gray-500 mb-1 uppercase tracking-widest text-[10px]">Project Title</label>
+                                <input type="text" id="edit-title" required className="w-full bg-white/5 border border-white/10 text-white rounded-xl shadow-sm focus:border-ammoue outline-none transition duration-150 p-3" />
+                            </div>
+                            <div className="mb-6">
+                                <label htmlFor="edit-prompt" className="block text-sm font-medium text-gray-500 mb-1 uppercase tracking-widest text-[10px]">AI Prompt</label>
+                                <textarea id="edit-prompt" rows={6} required className="w-full bg-white/5 border border-white/10 text-white rounded-xl shadow-sm focus:border-ammoue outline-none transition duration-150 p-3"></textarea>
+                            </div>
+                            <div className="flex justify-end space-x-3">
+                                <button type="button" onClick={closeEditModal} className="px-4 py-2 text-sm font-semibold rounded-xl text-gray-400 bg-white/5 hover:bg-white/10 transition duration-150">Cancel</button>
+                                <button type="submit" className="px-4 py-2 text-sm font-semibold rounded-xl text-black bg-white hover:bg-ammoue hover:text-white transition duration-150 shadow-md">Save Changes</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <div id="delete-confirm-modal" className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden items-center justify-center">
+                    <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl p-6 w-full max-w-sm m-4 transform transition-all duration-300 scale-95 opacity-0" id="delete-modal-content">
+                        <h2 className="text-xl font-bold text-white mb-3 flex items-center">
+                            <i data-lucide="alert-triangle" className="w-6 h-6 text-red-500 mr-2"></i> Confirm Deletion
+                        </h2>
+                        <p className="text-gray-500 mb-6">Are you sure you want to delete the project: **<span id="delete-project-title" className="text-red-400"></span>**? This action cannot be undone.</p>
+                        <div className="flex justify-end space-x-3">
+                            <button type="button" onClick={closeDeleteModal} className="px-4 py-2 text-sm font-semibold rounded-xl text-gray-400 bg-white/5 hover:bg-white/10 transition duration-150">Cancel</button>
+                            <button type="button" id="confirm-delete-button" className="px-4 py-2 text-sm font-semibold rounded-xl text-white bg-red-600/80 hover:bg-red-600 transition duration-150 shadow-md">Delete Project</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="delete-all-modal" className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden items-center justify-center">
+                    <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl p-6 w-full max-w-sm m-4 transform transition-all duration-300 scale-95 opacity-0" id="delete-all-modal-content">
+                        <h2 className="text-xl font-bold text-white mb-3 flex items-center text-red-500">
+                            <i data-lucide="alert-octagon" className="w-6 h-6 mr-2"></i> Delete Everything?
+                        </h2>
+                        <p className="text-gray-500 mb-6">Are you absolutely sure you want to delete <span id="delete-all-count" className="font-bold text-white"></span> projects? This action is permanent.</p>
+                        <div className="flex flex-col gap-2">
+                            <button type="button" id="confirm-delete-all-button" className="w-full px-4 py-2 text-sm font-bold rounded-xl text-white bg-red-600/80 hover:bg-red-700 transition duration-150 shadow-md">Yes, Delete All</button>
+                            <button type="button" onClick={closeDeleteAllModal} className="w-full px-4 py-2 text-sm font-semibold rounded-xl text-gray-500 bg-white/5 hover:bg-white/10 transition duration-150">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="export-confirm-modal" className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden items-center justify-center">
+                    <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl p-6 w-full max-w-sm m-4 transform transition-all duration-300 scale-95 opacity-0" id="export-modal-content">
+                        <h2 className="text-xl font-bold text-white mb-3 flex items-center">
+                            <i data-lucide="folder-down" className="w-6 h-6 text-blue-400 mr-2"></i> Export All Projects?
+                        </h2>
+                        <p className="text-gray-500 mb-6">This will bundle all your projects into a single ZIP file. Are you sure you want to proceed?</p>
+                        <div className="flex flex-col gap-2">
+                            <button type="button" onClick={handleExportAll} className="w-full px-4 py-2 text-sm font-bold rounded-xl text-black bg-white hover:bg-blue-400 transition duration-150 shadow-md">Start Export</button>
+                            <button type="button" onClick={closeExportModal} className="w-full px-4 py-2 text-sm font-semibold rounded-xl text-gray-500 bg-white/5 hover:bg-white/10 transition duration-150">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="transfer-modal" className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 hidden items-center justify-center">
+                    <div className="bg-[#0a0a0a] border border-white/10 rounded-2xl shadow-2xl p-6 w-full max-w-sm m-4 transform transition-all duration-300 scale-95 opacity-0" id="transfer-modal-content">
+                        <h2 className="text-xl font-bold text-white mb-3 flex items-center">
+                            <i data-lucide="share-2" className="w-6 h-6 text-blue-500 mr-2"></i> Transfer Ownership
+                        </h2>
+                        <p className="text-gray-500 text-sm mb-4">Transfer <span id="transfer-project-name" className="text-white font-bold"></span> to another user's email address.</p>
+                        
+                        <input type="hidden" id="transfer-project-id" />
+                        <div className="mb-4">
+                            <label className="block text-[10px] uppercase tracking-widest text-gray-500 mb-1">Recipient Email</label>
+                            <input type="email" id="transfer-email" placeholder="user@example.com" 
+                                   className="w-full bg-white/5 border border-white/10 text-white rounded-xl p-3 outline-none focus:border-blue-500 transition-all" />
+                        </div>
+
+                        <div className="flex flex-col gap-2">
+                            <button type="button" id="confirm-transfer-button" onClick={handleTransferProject}
+                                    className="w-full px-4 py-2 text-sm font-bold rounded-xl text-black bg-white hover:bg-blue-400 transition duration-150 shadow-md">
+                                Confirm Transfer
+                            </button>
+                            <button type="button" onClick={closeTransferModal} 
+                                    className="w-full px-4 py-2 text-sm font-semibold rounded-xl text-gray-500 bg-white/5 hover:bg-white/10 transition duration-150">
+                                Cancel
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <Script id="dashboard-init" strategy="lazyOnload" dangerouslySetInnerHTML={{
+                    __html: `
+                        import { observeAuth } from "./firedashboard.js";
+                        import * as Logic from "./dashboard-logic.js";
+                        import * as UI from "./dashboard-ui.js";
+
+                        window.handleLogout = Logic.handleLogout;
+                        window.handlePreview = Logic.handlePreview;
+                        window.handleDownload = Logic.handleDownload;
+                        window.handleCopyCode = Logic.handleCopyCode;
+                        window.handleExportAll = Logic.handleExportAll;
+                        window.handleTransferProject = Logic.executeTransferProject;
+                        window.openExportModal = UI.openExportModal;
+                        window.closeExportModal = UI.closeExportModal;
+                        window.openDeleteModal = UI.openDeleteModal;
+                        window.closeDeleteModal = UI.closeDeleteModal;
+                        window.openDeleteAllModal = UI.openDeleteAllModal;
+                        window.closeDeleteAllModal = UI.closeDeleteAllModal;
+                        window.openEditModal = UI.openEditModal;
+                        window.closeEditModal = UI.closeEditModal;
+                        window.openTransferModal = UI.openTransferModal;
+                        window.closeTransferModal = UI.closeTransferModal;
+                        window.toggleProjectMenu = UI.toggleProjectMenu;
+                        window.handleUpgradeClick = () => window.location.href = '/upgrade';
+                        window.triggerFilter = (val) => Logic.filterProjects(val, UI.renderProjects);
+
+                        const loadingScreen = document.getElementById('loading-screen');
+                        const dashboardContent = document.getElementById('dashboard-content');
+                        const userEmailSpan = document.getElementById('user-email');
+                        const currentPlanEl = document.getElementById('current-plan');
+                        const proContent = document.getElementById('pro-content');
+                        const upgradeCardWrapper = document.getElementById('upgrade-card-wrapper');
+                        const editForm = document.getElementById('edit-project-form');
+                        const confirmDeleteButton = document.getElementById('confirm-delete-button');
+                        const confirmDeleteAllButton = document.getElementById('confirm-delete-all-button');
+
+                        if (editForm) editForm.addEventListener('submit', Logic.handleEditFormSubmit);
+                        confirmDeleteButton.addEventListener('click', () => {
+                            const id = confirmDeleteButton.getAttribute('data-project-id');
+                            if (id) Logic.executeDeleteProject(id);
+                        });
+                        confirmDeleteAllButton.addEventListener('click', Logic.executeDeleteAllProjects);
+                        document.addEventListener('click', (e) => {
+                            if (!e.target.closest('.project-menu-trigger') && !e.target.closest('.project-menu')) {
+                                document.querySelectorAll('.project-menu').forEach(m => m.classList.remove('active'));
+                            }
+                        });
+
+                        observeAuth((user) => {
+                            if (user) {
+                                Logic.setCurrentUserId(user.uid);
+                                Logic.getProjects(user.uid, UI.renderProjects);
+                                Logic.loadUserPlanAndGateContent(user, userEmailSpan, currentPlanEl, proContent, upgradeCardWrapper);
+                                
+                                Logic.listenForPendingTransfers(user.uid, (transfers) => {
+                                    window.currentPendingTransfers = transfers;
+                                    UI.renderPendingTransfers(transfers);
+                                });
+
+                                loadingScreen.classList.add('hidden');
+                                dashboardContent.classList.remove('hidden');
+                                setTimeout(() => lucide.createIcons(), 100);
+                            } else {
+                                window.location.href = '/login';
+                            }
+                        });
+                    `
+                }} />
+            </div>
+        </>
+    );
+}
