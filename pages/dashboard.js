@@ -5,9 +5,9 @@ import Head from 'next/head';
 import Script from 'next/script';
 
 // --- ADDITIVE IMPORTS ---
-import { observeAuth } from "@/lib/firedashboard";
-import * as Logic from "@/lib/dashboard-logic";
-import * as UI from "@/lib/dashboard-ui";
+import { observeAuth } from "../lib/firedashboard";
+import * as Logic from "../lib/dashboard-logic";
+import * as UI from "../lib/dashboard-ui";
 
 // This component preserves 100% of the original HTML/CSS structure and logic 
 // converted into a Next.js Functional Component.
